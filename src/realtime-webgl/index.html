@@ -186,8 +186,8 @@
   };
 
   const defaultView = {
-    camYaw: 0.14,
-    camPitch: 0.14,
+    camYaw: 0.22,
+    camPitch: 0.28,
   };
 
   const state = {
@@ -589,10 +589,14 @@
         float z = fi * maxDepth;
         float swirlA = sin(a * 5.0 + z * 4.8 - uTime * 2.3);
         float swirlB = sin(a * 9.0 - z * 3.2 + uTime * 1.4);
-        float spin = clamp(0.5 + 0.25 * swirlA + 0.25 * swirlB, 0.0, 1.0);
+        float spinLive = clamp(0.5 + 0.25 * swirlA + 0.25 * swirlB, 0.0, 1.0);
+        float spinCine = 0.5 + 0.5 * sin(z * 6.4 - uTime * 1.5 + inner * 2.4);
+        float spin = mix(spinLive, spinCine, uRenderMode);
         float bandsBase = sin(z * 11.0 - uTime * 1.6 + inner * 3.0);
         float bandsHi = sin(z * 18.0 + uTime * 2.2 + inner * 5.0);
-        float bands = clamp(0.5 + 0.35 * bandsBase + 0.15 * bandsHi * uRenderMode, 0.0, 1.0);
+        float bandsLive = clamp(0.5 + 0.35 * bandsBase + 0.15 * bandsHi * uRenderMode, 0.0, 1.0);
+        float bandsCine = 0.5 + 0.5 * sin(z * 8.2 + uTime * 1.1 + inner * 2.6);
+        float bands = mix(bandsLive, bandsCine, uRenderMode * 0.75);
         float density = exp(-z * 0.72) * (0.46 + 0.54 * bands) * exp(-pow(inner, 1.28));
         vec3 col = mix(vec3(0.015, 0.032, 0.070), vec3(0.20, 0.44, 0.98), spin);
         float stepLen = maxDepth * stepsInv;
@@ -606,11 +610,13 @@
     }
 
     vec3 composeWormhole(mat3 cam, vec2 uv, int raySteps) {
-      vec2 center = vec2(0.19, -0.01);
+      vec2 center = mix(vec2(0.19, -0.01), vec2(0.16, -0.05), uRenderMode);
       vec2 p = uv - center;
       p = rot2(uCamAngles.x * 0.42) * p;
 
-      float tilt = clamp(0.62 + 0.26 * cos(uCamAngles.y * 1.2), 0.52, 0.92);
+      float tiltLive = clamp(0.62 + 0.26 * cos(uCamAngles.y * 1.2), 0.52, 0.92);
+      float tiltCine = clamp(0.42 + 0.12 * cos(uCamAngles.y + 0.4), 0.34, 0.62);
+      float tilt = mix(tiltLive, tiltCine, uRenderMode);
       vec2 q = vec2(p.x, p.y / tilt);
       float r = length(q) + 1e-4;
       float a = atan(q.y, q.x);
@@ -620,8 +626,9 @@
       vec3 rdBg = normalize(cam * vec3(uvBg, 1.72));
       vec3 color = background(rdBg);
 
-      float ringRadius = mix(0.108, 0.148, clamp(uLensStrength / 1.8, 0.0, 1.0));
-      float ringWidth = mix(0.032, 0.012, uQuality);
+      float ringRadiusBase = mix(0.108, 0.148, clamp(uLensStrength / 1.8, 0.0, 1.0));
+      float ringRadius = mix(ringRadiusBase, ringRadiusBase * 1.08 + 0.010, uRenderMode);
+      float ringWidth = mix(0.032, 0.012, uQuality) * mix(1.0, 0.78, uRenderMode);
 
       vec3 diskEnergy = accretionDisk(r, a, ringRadius, ringWidth);
       vec3 throat = throatVolume(r, a, ringRadius, raySteps);
@@ -643,6 +650,10 @@
       color += vec3(0.90, 0.98, 1.12) * photonRing * 0.18;
       color += vec3(0.16, 0.42, 0.94) * halo * 0.20;
 
+      float dopplerArc = smoothstep(-0.2, 1.0, cos(a - 0.4));
+      float shearBand = exp(-pow((r - ringRadius * 0.97) / (ringWidth * 0.65), 2.0));
+      color += vec3(0.90, 0.64, 0.34) * shearBand * dopplerArc * 0.24 * uRenderMode;
+
       float cinematicArc = exp(-pow((r - ringRadius * 1.30) / 0.12, 2.0)) *
         (0.65 + 0.35 * sin(a * 4.0 + uTime * 0.8 + r * 6.0));
       color += vec3(0.20, 0.46, 1.04) * cinematicArc * 0.14 * uRenderMode;
@@ -658,8 +669,8 @@
 
       float yaw = uCamAngles.x + uTime * mix(0.048, 0.028, uRenderMode);
       float pitch = clamp(uCamAngles.y, -1.0, 1.0);
-      float radius = mix(8.5, 7.2, uRenderMode);
-      float height = mix(1.9, 2.7, uRenderMode);
+      float radius = mix(8.5, 6.8, uRenderMode);
+      float height = mix(1.9, 3.0, uRenderMode);
       vec3 ro = vec3(cos(yaw) * radius, sin(pitch) * height, sin(yaw) * radius);
       mat3 cam = cameraBasis(ro, vec3(0.0));
 
@@ -669,6 +680,11 @@
         vec2 j = vec2(0.45, -0.30) / uResolution;
         vec3 color2 = composeWormhole(cam, uv + j, uRaySteps);
         color = mix(color, color2, 0.30);
+        if (uRenderMode > 0.5) {
+          vec2 j2 = vec2(-0.35, 0.22) / uResolution;
+          vec3 color3 = composeWormhole(cam, uv + j2, uRaySteps);
+          color = mix(color, color3, 0.25);
+        }
       }
 
       color *= uExposure;
