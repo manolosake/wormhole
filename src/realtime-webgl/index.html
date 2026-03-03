@@ -524,18 +524,18 @@
 
     vec3 background(vec3 rd) {
       float h = clamp(rd.y * 0.5 + 0.5, 0.0, 1.0);
-      vec3 base = mix(vec3(0.005, 0.012, 0.034), vec3(0.032, 0.058, 0.126), h);
+      vec3 base = mix(vec3(0.012, 0.004, 0.028), vec3(0.050, 0.026, 0.098), h);
 
-      float dustBand = exp(-pow(rd.y * 2.1, 2.0));
-      float dust = 0.5 + 0.5 * sin(rd.x * 9.0 + rd.z * 7.0 + uTime * 0.015);
-      base += vec3(0.034, 0.024, 0.048) * dustBand * dust * 0.55;
+      float dustBand = exp(-pow(rd.y * 2.0, 2.0));
+      float dust = 0.5 + 0.5 * sin(rd.x * 8.0 + rd.z * 6.5 + uTime * 0.018);
+      base += vec3(0.060, 0.032, 0.084) * dustBand * dust * 0.58;
 
       vec3 id = floor(rd * 360.0);
       vec3 fr = fract(rd * 360.0) - 0.5;
       float star = smoothstep(0.09, 0.0, length(fr)) * step(0.9975, hash13(id));
       vec3 starCol = mix(vec3(0.62, 0.78, 1.00), vec3(1.00, 0.85, 0.58), hash13(id + 8.7));
 
-      return base + starCol * star * 8.4;
+      return base + starCol * star * 8.8;
     }
 
     mat2 rot2(float a) {
@@ -544,121 +544,98 @@
       return mat2(c, -s, s, c);
     }
 
-    vec2 lensingField(vec2 q, float r, float a, float lensStrength, float t) {
-      vec2 dir = q / max(r, 1e-4);
-      vec2 tanDir = vec2(-dir.y, dir.x);
-      float radial = lensStrength * 0.100 / (r * r + 0.020);
-      float swirl = 0.004 * sin(a * 6.0 - t * 1.45) * exp(-r * 7.0);
-      return q + dir * radial + tanDir * swirl;
+    float tunnelRadius(float x) {
+      float s = abs(x) * 1.85;
+      return 0.11 + 0.10 * sqrt(1.0 + s * s);
     }
 
-    vec3 accretionDisk(float r, float a, float ringRadius, float ringWidth) {
-      float disk = exp(-pow((r - ringRadius) / ringWidth, 2.0));
-      float rim = exp(-pow((r - ringRadius * 1.01) / (ringWidth * 0.43), 2.0));
-      float nearSide = smoothstep(-0.72, 0.94, sin(a - 0.10));
-      float modeMix = uRenderMode;
-      float filamentLow = 0.5 + 0.5 * sin(a * 8.0 - uTime * 2.0 + r * 30.0);
-      float filamentHi = 0.5 + 0.5 * sin(a * 15.0 - uTime * 3.4 + r * 56.0);
-      float filaments = mix(filamentLow, filamentHi, modeMix);
-
-      vec3 warm = vec3(1.62, 0.94, 0.42);
-      vec3 cool = vec3(0.22, 0.62, 1.36);
-      vec3 col = mix(cool, warm, nearSide);
-
-      float dop = clamp(1.0 + uBeta * cos(a - 0.12), 0.54, 1.95);
-      col *= vec3(pow(dop, 1.22), 1.0, pow(1.0 / dop, 1.14));
-
-      vec3 energy = col * disk * (0.36 + 1.00 * nearSide) * (0.42 + 0.58 * filaments) * (0.50 + 0.58 * uEmission);
-      energy *= mix(1.0, 1.22, modeMix);
-      energy += vec3(1.00, 0.98, 0.90) * rim * (0.09 + 0.24 * nearSide) * mix(1.0, 1.35, modeMix);
-      return energy;
-    }
-
-    vec3 throatVolume(float r, float a, float ringRadius, int raySteps) {
-      float inner = max(0.0001, r / max(0.0001, ringRadius * 0.95));
-      float depth = 1.0 / (inner + 0.10);
-      float occlusion = exp(-pow(r / (ringRadius * 0.53), 2.7));
-
-      vec3 accum = vec3(0.0);
-      float trans = 1.0;
-      float maxDepth = mix(3.8, 8.6, uRenderMode);
-      float stepsInv = 1.0 / max(1.0, float(raySteps));
-      for (int i = 0; i < 128; i++) {
-        if (i >= raySteps) break;
-        float fi = float(i) * stepsInv;
-        float z = fi * maxDepth;
-        float swirlA = sin(a * 5.0 + z * 4.8 - uTime * 2.3);
-        float swirlB = sin(a * 9.0 - z * 3.2 + uTime * 1.4);
-        float spinLive = clamp(0.5 + 0.25 * swirlA + 0.25 * swirlB, 0.0, 1.0);
-        float spinCine = 0.5 + 0.5 * sin(z * 6.4 - uTime * 1.5 + inner * 2.4);
-        float spin = mix(spinLive, spinCine, uRenderMode);
-        float bandsBase = sin(z * 11.0 - uTime * 1.6 + inner * 3.0);
-        float bandsHi = sin(z * 18.0 + uTime * 2.2 + inner * 5.0);
-        float bandsLive = clamp(0.5 + 0.35 * bandsBase + 0.15 * bandsHi * uRenderMode, 0.0, 1.0);
-        float bandsCine = 0.5 + 0.5 * sin(z * 8.2 + uTime * 1.1 + inner * 2.6);
-        float bands = mix(bandsLive, bandsCine, uRenderMode * 0.75);
-        float density = exp(-z * 0.72) * (0.46 + 0.54 * bands) * exp(-pow(inner, 1.28));
-        vec3 col = mix(vec3(0.015, 0.032, 0.070), vec3(0.20, 0.44, 0.98), spin);
-        float stepLen = maxDepth * stepsInv;
-        float alpha = 1.0 - exp(-density * (1.8 + uEmission * 0.45) * stepLen);
-        accum += trans * col * alpha;
-        trans *= (1.0 - alpha);
-        if (trans < 0.02) break;
-      }
-      accum *= (1.0 - occlusion * (0.86 + 0.10 * uGravShift));
-      return accum;
+    float tunnelRadiusDx(float x) {
+      float e = 0.001;
+      return (tunnelRadius(x + e) - tunnelRadius(x - e)) / (2.0 * e);
     }
 
     vec3 composeWormhole(mat3 cam, vec2 uv, int raySteps) {
-      vec2 center = mix(vec2(0.19, -0.01), vec2(0.16, -0.05), uRenderMode);
-      vec2 p = uv - center;
-      p = rot2(uCamAngles.x * 0.42) * p;
+      float mode = uRenderMode;
+      float t = uTime;
 
-      float tiltLive = clamp(0.62 + 0.26 * cos(uCamAngles.y * 1.2), 0.52, 0.92);
-      float tiltCine = clamp(0.42 + 0.12 * cos(uCamAngles.y + 0.4), 0.34, 0.62);
-      float tilt = mix(tiltLive, tiltCine, uRenderMode);
-      vec2 q = vec2(p.x, p.y / tilt);
-      float r = length(q) + 1e-4;
-      float a = atan(q.y, q.x);
+      vec2 p = uv;
+      p.x += sin(uCamAngles.x) * 0.075;
+      p.y += sin(uCamAngles.y) * 0.055;
 
-      vec2 qLensed = lensingField(q, r, a, uLensStrength, uTime);
-      vec2 uvBg = center + vec2(qLensed.x, qLensed.y * tilt);
-      vec3 rdBg = normalize(cam * vec3(uvBg, 1.72));
-      vec3 color = background(rdBg);
+      float x = p.x * 1.45;
+      float y = p.y * 1.05;
+      float ay = abs(y);
 
-      float ringRadiusBase = mix(0.108, 0.148, clamp(uLensStrength / 1.8, 0.0, 1.0));
-      float ringRadius = mix(ringRadiusBase, ringRadiusBase * 1.08 + 0.010, uRenderMode);
-      float ringWidth = mix(0.032, 0.012, uQuality) * mix(1.0, 0.78, uRenderMode);
+      float r = tunnelRadius(x);
+      float sd = ay - r;
+      float drdx = tunnelRadiusDx(x);
+      vec2 n = normalize(vec2(-drdx, sign(y == 0.0 ? 1.0 : y)));
+      vec2 ldir = normalize(vec2(-0.32, 0.95));
+      float diff = clamp(dot(n, ldir), 0.0, 1.0);
 
-      vec3 diskEnergy = accretionDisk(r, a, ringRadius, ringWidth);
-      vec3 throat = throatVolume(r, a, ringRadius, raySteps);
-      float throatMask = exp(-pow(r / (ringRadius * 0.92), 1.55));
-      color += diskEnergy;
-      color = mix(color, throat + color * 0.45, throatMask * 0.62);
+      float shellW = mix(0.0065, 0.0048, mode);
+      float shell = exp(-pow(sd / shellW, 2.0));
+      float inside = 1.0 - smoothstep(0.0, 0.016, sd);
 
-      vec2 dir = q / max(r, 1e-4);
-      float mirrorR = ringRadius * ringRadius / (r + 0.030);
-      vec2 qMirror = dir * mirrorR;
-      vec2 uvMirror = center + vec2(qMirror.x, qMirror.y * tilt);
-      vec3 lensCol = background(normalize(cam * vec3(uvMirror, 1.72)));
-      float nearSide = smoothstep(-0.72, 0.94, sin(a - 0.10));
-      float lensBand = exp(-pow((r - ringRadius * 0.80) / (ringWidth * 0.72), 2.0));
-      color += lensCol * lensBand * (0.22 + 0.14 * (1.0 - nearSide));
+      float lineDetail = mix(1.0, float(raySteps) / 98.0, mode);
+      float merPhase = (x * mix(10.5, 16.5, mode) - t * 0.55) * lineDetail;
+      float meridian = exp(-pow(sin(merPhase) / 0.11, 2.0));
 
-      float photonRing = exp(-pow((r - ringRadius * 1.06) / 0.006, 2.0));
-      float halo = exp(-pow((r - ringRadius * 1.24) / 0.034, 2.0));
-      color += vec3(0.90, 0.98, 1.12) * photonRing * 0.18;
-      color += vec3(0.16, 0.42, 0.94) * halo * 0.20;
+      float latAccum = 0.0;
+      for (int i = 1; i <= 8; i++) {
+        float f = float(i) / 8.0;
+        float yi = r * f;
+        float w = mix(0.0052, 0.0032, f);
+        latAccum += exp(-pow((ay - yi) / w, 2.0));
+      }
+      float latGrid = clamp(latAccum * 0.18, 0.0, 1.0) * inside;
+      float lonRibs = exp(-pow(sin((x * mix(13.0, 19.0, mode) - t * 0.46) * lineDetail) / 0.13, 2.0));
+      float lonMask = inside * exp(-pow(ay / max(0.0001, r * 1.02), 6.0));
+      float mesh = clamp(shell * (0.55 + 0.45 * meridian) + latGrid * (0.45 + 0.55 * meridian) + lonRibs * lonMask * 0.42, 0.0, 1.0);
 
-      float dopplerArc = smoothstep(-0.2, 1.0, cos(a - 0.4));
-      float shearBand = exp(-pow((r - ringRadius * 0.97) / (ringWidth * 0.65), 2.0));
-      color += vec3(0.90, 0.64, 0.34) * shearBand * dopplerArc * 0.24 * uRenderMode;
+      vec3 warm = vec3(1.62, 1.02, 0.40);
+      vec3 cool = vec3(0.58, 0.54, 1.38);
+      float sideMix = smoothstep(-1.2, 1.2, x + 0.16 * sin(t * 0.08));
+      vec3 shellCol = mix(cool, warm, sideMix) * (0.52 + 0.72 * diff);
 
-      float cinematicArc = exp(-pow((r - ringRadius * 1.30) / 0.12, 2.0)) *
-        (0.65 + 0.35 * sin(a * 4.0 + uTime * 0.8 + r * 6.0));
-      color += vec3(0.20, 0.46, 1.04) * cinematicArc * 0.14 * uRenderMode;
-      float cinematicCore = exp(-pow(r / (ringRadius * 0.28), 2.0));
-      color += vec3(0.58, 0.82, 1.22) * cinematicCore * 0.18 * uRenderMode;
+      float throat = exp(-pow(x / 0.19, 2.0)) * exp(-pow(ay / 0.08, 2.0));
+      float beam = exp(-pow(ay / 0.018, 2.0)) * exp(-pow(x / 0.62, 2.0));
+      vec3 core = vec3(1.95, 1.62, 1.02) * (0.22 * throat + 0.12 * beam);
+      core *= mix(1.0, 1.18, mode);
+
+      vec2 ml = vec2(-1.22, 0.0);
+      vec2 mr = vec2( 1.22, 0.0);
+      float mouthR = mix(0.24, 0.285, mode);
+      float mouthL = 1.0 - smoothstep(mouthR, mouthR + 0.008, length(vec2(x, y) - ml));
+      float mouthRgt = 1.0 - smoothstep(mouthR, mouthR + 0.008, length(vec2(x, y) - mr));
+      mouthL *= smoothstep(-1.65, -0.78, x);
+      mouthRgt *= smoothstep(0.78, 1.65, x);
+      float mouths = max(mouthL, mouthRgt);
+
+      float lens = uLensStrength * 0.08 / (abs(sd) + 0.06);
+      vec2 uvWarp = uv;
+      uvWarp.x += sign(x) * lens * exp(-ay * 2.2) * 0.07;
+      uvWarp.y += sin(x * 8.8 + t * 0.56) * lens * 0.010;
+      vec3 bg = background(normalize(cam * vec3(uvWarp, 1.75)));
+
+      vec3 color = bg;
+      color += shellCol * shell * (0.42 + 0.34 * uEmission);
+      color += vec3(1.00, 0.92, 0.80) * mesh * mix(0.78, 0.95, mode);
+      color += core;
+
+      float interior = exp(-pow(ay / max(0.05, r * 0.75), 2.7));
+      color += mix(vec3(0.045, 0.018, 0.085), vec3(0.12, 0.035, 0.085), sideMix) * interior * 0.16 * inside;
+
+      float cavity = exp(-pow(ay / max(0.04, r * 0.40), 2.4)) * exp(-pow(x / 0.80, 2.0));
+      color *= (1.0 - 0.62 * cavity);
+      color *= (1.0 - 0.995 * mouths);
+
+      float ringL = exp(-pow((length(vec2(x, y) - ml) - mouthR * 1.02) / 0.0055, 2.0));
+      float ringR = exp(-pow((length(vec2(x, y) - mr) - mouthR * 1.02) / 0.0055, 2.0));
+      color += vec3(0.98, 0.90, 0.72) * (ringL + ringR) * 0.58;
+
+      float seam = exp(-pow((ay - r) / 0.022, 2.0)) * exp(-pow(x / 1.10, 2.0));
+      color += vec3(0.12, 0.32, 0.96) * seam * 0.06 * mode;
 
       return color;
     }
@@ -667,10 +644,10 @@
       vec2 frag = gl_FragCoord.xy;
       vec2 uv = (frag - 0.5 * uResolution) / uResolution.y;
 
-      float yaw = uCamAngles.x + uTime * mix(0.048, 0.028, uRenderMode);
+      float yaw = uCamAngles.x + uTime * mix(0.042, 0.022, uRenderMode);
       float pitch = clamp(uCamAngles.y, -1.0, 1.0);
-      float radius = mix(8.5, 6.8, uRenderMode);
-      float height = mix(1.9, 3.0, uRenderMode);
+      float radius = mix(8.4, 7.0, uRenderMode);
+      float height = mix(2.2, 3.2, uRenderMode);
       vec3 ro = vec3(cos(yaw) * radius, sin(pitch) * height, sin(yaw) * radius);
       mat3 cam = cameraBasis(ro, vec3(0.0));
 

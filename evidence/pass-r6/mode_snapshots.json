@@ -1,12 +1,12 @@
 {
-  "timestamp": "2026-03-03T01:45:05.730Z",
+  "timestamp": "2026-03-03T01:59:59.026Z",
   "live": {
     "mode": "live",
     "metrics": {
-      "fpsAvg": 37.6,
-      "frameMs": 26.6,
-      "frameCount": 8,
-      "timestamp": "2026-03-03T01:44:28.423Z",
+      "fpsAvg": 27.02,
+      "frameMs": 37.01,
+      "frameCount": 26,
+      "timestamp": "2026-03-03T01:59:44.162Z",
       "preset": "scientific",
       "renderMode": "live",
       "resolutionScale": 1,
@@ -21,10 +21,10 @@
         "deterministicMode": true
       },
       "realismScore": 100,
-      "stabilityScore": 49.78
+      "stabilityScore": 21.67
     },
     "eval": {
-      "timestamp": "2026-03-03T01:44:28.423Z",
+      "timestamp": "2026-03-03T01:59:44.162Z",
       "checks": {
         "webgl2": true,
         "lensing_active": true,
@@ -35,17 +35,17 @@
       },
       "realismScore": 100,
       "guardrails_pass": true,
-      "live_target_met": true,
-      "desktop_scientific_met": true
+      "live_target_met": false,
+      "desktop_scientific_met": false
     }
   },
   "cinematic": {
     "mode": "cinematic",
     "metrics": {
-      "fpsAvg": 46.13,
-      "frameMs": 21.68,
-      "frameCount": 4,
-      "timestamp": "2026-03-03T01:44:43.950Z",
+      "fpsAvg": 29.26,
+      "frameMs": 34.18,
+      "frameCount": 18,
+      "timestamp": "2026-03-03T01:59:55.077Z",
       "preset": "cinematic",
       "renderMode": "cinematic",
       "resolutionScale": 1,
@@ -60,10 +60,10 @@
         "deterministicMode": true
       },
       "realismScore": 100,
-      "stabilityScore": 63.07
+      "stabilityScore": 29.32
     },
     "eval": {
-      "timestamp": "2026-03-03T01:44:43.950Z",
+      "timestamp": "2026-03-03T01:59:55.077Z",
       "checks": {
         "webgl2": true,
         "lensing_active": true,
