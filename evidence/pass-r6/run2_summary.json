@@ -6,8 +6,8 @@
     "height": 1268
   },
   "samples_count": 60,
-  "avg_fps": 30.03,
-  "min_fps": 29.96,
+  "avg_fps": 45.4,
+  "min_fps": 30.03,
   "p95_frame_ms": 33.3,
   "target_avg_fps": 30,
   "target_min_fps_floor": 24,
@@ -15,7 +15,7 @@
   "fps_ge_target_all": true,
   "sustained_fps_ge_target": true,
   "sustained_fps_ge_45": false,
-  "avg_fps_ge_45": false,
+  "avg_fps_ge_45": true,
   "fps_ge_45_all": false,
   "guardrails_pass_all": true,
   "contract": {

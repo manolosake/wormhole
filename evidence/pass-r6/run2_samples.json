@@ -465,10 +465,10 @@
   },
   {
     "second": 30,
-    "fps": 29.96,
-    "frameMs": 33.38,
+    "fps": 56.58,
+    "frameMs": 17.67,
     "realismScore": 80,
-    "stabilityScore": 31.48,
+    "stabilityScore": 73.88,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -481,10 +481,10 @@
   },
   {
     "second": 31,
-    "fps": 29.98,
-    "frameMs": 33.35,
+    "fps": 59.81,
+    "frameMs": 16.72,
     "realismScore": 80,
-    "stabilityScore": 31.55,
+    "stabilityScore": 76.46,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -497,10 +497,10 @@
   },
   {
     "second": 32,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.68,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -513,10 +513,10 @@
   },
   {
     "second": 33,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.69,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -529,10 +529,10 @@
   },
   {
     "second": 34,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.69,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -545,10 +545,10 @@
   },
   {
     "second": 35,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.69,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -561,10 +561,10 @@
   },
   {
     "second": 36,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.69,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -577,10 +577,10 @@
   },
   {
     "second": 37,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.69,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -593,10 +593,10 @@
   },
   {
     "second": 38,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.69,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -609,10 +609,10 @@
   },
   {
     "second": 39,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.69,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -625,10 +625,10 @@
   },
   {
     "second": 40,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.69,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -641,10 +641,10 @@
   },
   {
     "second": 41,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.69,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -657,10 +657,10 @@
   },
   {
     "second": 42,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.69,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -673,10 +673,10 @@
   },
   {
     "second": 43,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.69,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -689,10 +689,10 @@
   },
   {
     "second": 44,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.68,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -705,10 +705,10 @@
   },
   {
     "second": 45,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.69,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -721,10 +721,10 @@
   },
   {
     "second": 46,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.69,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -737,10 +737,10 @@
   },
   {
     "second": 47,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.69,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -753,10 +753,10 @@
   },
   {
     "second": 48,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.69,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -769,10 +769,10 @@
   },
   {
     "second": 49,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.69,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -785,10 +785,10 @@
   },
   {
     "second": 50,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.69,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -801,10 +801,10 @@
   },
   {
     "second": 51,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.69,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -817,10 +817,10 @@
   },
   {
     "second": 52,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.69,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -833,10 +833,10 @@
   },
   {
     "second": 53,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.69,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -849,10 +849,10 @@
   },
   {
     "second": 54,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.69,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -865,10 +865,10 @@
   },
   {
     "second": 55,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.69,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -881,10 +881,10 @@
   },
   {
     "second": 56,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.69,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -897,10 +897,10 @@
   },
   {
     "second": 57,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.69,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -913,10 +913,10 @@
   },
   {
     "second": 58,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.69,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -929,10 +929,10 @@
   },
   {
     "second": 59,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.69,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
@@ -945,10 +945,10 @@
   },
   {
     "second": 60,
-    "fps": 30.03,
-    "frameMs": 33.3,
+    "fps": 59.88,
+    "frameMs": 16.7,
     "realismScore": 80,
-    "stabilityScore": 31.69,
+    "stabilityScore": 76.51,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,

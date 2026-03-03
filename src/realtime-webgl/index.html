@@ -235,7 +235,7 @@
       mobile:     { lensStrength: 1.00, beta: 0.22, gravShift: 0.90, emission: 1.00, quality: 0.55, exposure: 0.98 },
       tablet:     { lensStrength: 1.10, beta: 0.28, gravShift: 1.02, emission: 1.18, quality: 0.72, exposure: 1.02 },
       scientific: { lensStrength: 1.16, beta: 0.34, gravShift: 1.18, emission: 1.42, quality: 0.78, exposure: 1.02 },
-      cinematic:  { lensStrength: 1.30, beta: 0.40, gravShift: 1.34, emission: 1.70, quality: 0.90, exposure: 1.10 },
+      cinematic:  { lensStrength: 1.36, beta: 0.42, gravShift: 1.36, emission: 1.88, quality: 0.96, exposure: 1.14 },
     };
     const p = presets[name] || presets.scientific;
     state.preset = name;
@@ -556,7 +556,10 @@
       float disk = exp(-pow((r - ringRadius) / ringWidth, 2.0));
       float rim = exp(-pow((r - ringRadius * 1.01) / (ringWidth * 0.43), 2.0));
       float nearSide = smoothstep(-0.72, 0.94, sin(a - 0.10));
-      float filaments = 0.5 + 0.5 * sin(a * 8.0 - uTime * 2.0 + r * 30.0);
+      float modeMix = uRenderMode;
+      float filamentLow = 0.5 + 0.5 * sin(a * 8.0 - uTime * 2.0 + r * 30.0);
+      float filamentHi = 0.5 + 0.5 * sin(a * 15.0 - uTime * 3.4 + r * 56.0);
+      float filaments = mix(filamentLow, filamentHi, modeMix);
 
       vec3 warm = vec3(1.62, 0.94, 0.42);
       vec3 cool = vec3(0.22, 0.62, 1.36);
@@ -566,7 +569,8 @@
       col *= vec3(pow(dop, 1.22), 1.0, pow(1.0 / dop, 1.14));
 
       vec3 energy = col * disk * (0.36 + 1.00 * nearSide) * (0.42 + 0.58 * filaments) * (0.50 + 0.58 * uEmission);
-      energy += vec3(1.00, 0.98, 0.90) * rim * (0.09 + 0.24 * nearSide);
+      energy *= mix(1.0, 1.22, modeMix);
+      energy += vec3(1.00, 0.98, 0.90) * rim * (0.09 + 0.24 * nearSide) * mix(1.0, 1.35, modeMix);
       return energy;
     }
 
@@ -577,14 +581,18 @@
 
       vec3 accum = vec3(0.0);
       float trans = 1.0;
-      float maxDepth = mix(3.8, 6.4, uRenderMode);
+      float maxDepth = mix(3.8, 8.6, uRenderMode);
       float stepsInv = 1.0 / max(1.0, float(raySteps));
       for (int i = 0; i < 128; i++) {
         if (i >= raySteps) break;
         float fi = float(i) * stepsInv;
         float z = fi * maxDepth;
-        float spin = 0.5 + 0.5 * sin(a * 6.0 + z * 4.8 - uTime * 2.3);
-        float bands = 0.5 + 0.5 * sin(z * 11.0 - uTime * 1.6 + inner * 3.0);
+        float swirlA = sin(a * 5.0 + z * 4.8 - uTime * 2.3);
+        float swirlB = sin(a * 9.0 - z * 3.2 + uTime * 1.4);
+        float spin = clamp(0.5 + 0.25 * swirlA + 0.25 * swirlB, 0.0, 1.0);
+        float bandsBase = sin(z * 11.0 - uTime * 1.6 + inner * 3.0);
+        float bandsHi = sin(z * 18.0 + uTime * 2.2 + inner * 5.0);
+        float bands = clamp(0.5 + 0.35 * bandsBase + 0.15 * bandsHi * uRenderMode, 0.0, 1.0);
         float density = exp(-z * 0.72) * (0.46 + 0.54 * bands) * exp(-pow(inner, 1.28));
         vec3 col = mix(vec3(0.015, 0.032, 0.070), vec3(0.20, 0.44, 0.98), spin);
         float stepLen = maxDepth * stepsInv;
@@ -635,6 +643,12 @@
       color += vec3(0.90, 0.98, 1.12) * photonRing * 0.18;
       color += vec3(0.16, 0.42, 0.94) * halo * 0.20;
 
+      float cinematicArc = exp(-pow((r - ringRadius * 1.30) / 0.12, 2.0)) *
+        (0.65 + 0.35 * sin(a * 4.0 + uTime * 0.8 + r * 6.0));
+      color += vec3(0.20, 0.46, 1.04) * cinematicArc * 0.14 * uRenderMode;
+      float cinematicCore = exp(-pow(r / (ringRadius * 0.28), 2.0));
+      color += vec3(0.58, 0.82, 1.22) * cinematicCore * 0.18 * uRenderMode;
+
       return color;
     }
 
@@ -642,10 +656,10 @@
       vec2 frag = gl_FragCoord.xy;
       vec2 uv = (frag - 0.5 * uResolution) / uResolution.y;
 
-      float yaw = uCamAngles.x + uTime * mix(0.048, 0.034, uRenderMode);
+      float yaw = uCamAngles.x + uTime * mix(0.048, 0.028, uRenderMode);
       float pitch = clamp(uCamAngles.y, -1.0, 1.0);
-      float radius = mix(8.5, 9.2, uRenderMode);
-      float height = mix(1.9, 2.4, uRenderMode);
+      float radius = mix(8.5, 7.2, uRenderMode);
+      float height = mix(1.9, 2.7, uRenderMode);
       vec3 ro = vec3(cos(yaw) * radius, sin(pitch) * height, sin(yaw) * radius);
       mat3 cam = cameraBasis(ro, vec3(0.0));
 

@@ -1,12 +1,12 @@
 {
   "run1_avg_fps": 30.03,
-  "run2_avg_fps": 30.03,
+  "run2_avg_fps": 45.4,
   "run1_min_fps": 30.03,
-  "run2_min_fps": 29.96,
+  "run2_min_fps": 30.03,
   "target_avg_fps": 30.0,
   "target_min_fps_floor": 24.0,
-  "drift_avg_fps_delta": 0.0,
-  "drift_min_fps_delta": 0.07,
+  "drift_avg_fps_delta": 15.37,
+  "drift_min_fps_delta": 0.0,
   "drift_p95_frame_ms_delta": 0.0,
   "both_pass": true,
   "errors": []

@@ -4,7 +4,7 @@
     "fps": 30.03,
     "frameMs": 33.3,
     "realismScore": 80,
-    "stabilityScore": 31.68,
+    "stabilityScore": 31.69,
     "guardrails": {
       "webgl2": false,
       "lensing_active": true,
