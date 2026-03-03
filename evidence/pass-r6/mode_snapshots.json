@@ -1,30 +1,30 @@
 {
-  "timestamp": "2026-03-03T01:59:59.026Z",
+  "timestamp": "2026-03-03T02:10:57.964Z",
   "live": {
     "mode": "live",
     "metrics": {
       "fpsAvg": 27.02,
       "frameMs": 37.01,
       "frameCount": 26,
-      "timestamp": "2026-03-03T01:59:44.162Z",
+      "timestamp": "2026-03-03T02:10:43.406Z",
       "preset": "scientific",
       "renderMode": "live",
       "resolutionScale": 1,
       "raySteps": 76,
       "params": {
-        "lensStrength": 1.16,
-        "beta": 0.34,
-        "gravShift": 1.18,
-        "emission": 1.42,
+        "lensStrength": 1.24,
+        "beta": 0.32,
+        "gravShift": 1.32,
+        "emission": 1.62,
         "quality": 0.78,
-        "exposure": 1.02,
+        "exposure": 1.03,
         "deterministicMode": true
       },
       "realismScore": 100,
       "stabilityScore": 21.67
     },
     "eval": {
-      "timestamp": "2026-03-03T01:59:44.162Z",
+      "timestamp": "2026-03-03T02:10:43.406Z",
       "checks": {
         "webgl2": true,
         "lensing_active": true,
@@ -42,28 +42,28 @@
   "cinematic": {
     "mode": "cinematic",
     "metrics": {
-      "fpsAvg": 29.26,
-      "frameMs": 34.18,
-      "frameCount": 18,
-      "timestamp": "2026-03-03T01:59:55.077Z",
+      "fpsAvg": 27.21,
+      "frameMs": 36.75,
+      "frameCount": 25,
+      "timestamp": "2026-03-03T02:10:54.763Z",
       "preset": "cinematic",
       "renderMode": "cinematic",
       "resolutionScale": 1,
       "raySteps": 127,
       "params": {
-        "lensStrength": 1.36,
-        "beta": 0.42,
-        "gravShift": 1.36,
-        "emission": 1.88,
+        "lensStrength": 1.42,
+        "beta": 0.44,
+        "gravShift": 1.52,
+        "emission": 2.06,
         "quality": 0.96,
-        "exposure": 1.14,
+        "exposure": 1.12,
         "deterministicMode": true
       },
       "realismScore": 100,
-      "stabilityScore": 29.32
+      "stabilityScore": 22.37
     },
     "eval": {
-      "timestamp": "2026-03-03T01:59:55.077Z",
+      "timestamp": "2026-03-03T02:10:54.763Z",
       "checks": {
         "webgl2": true,
         "lensing_active": true,

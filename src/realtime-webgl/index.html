@@ -186,8 +186,8 @@
   };
 
   const defaultView = {
-    camYaw: 0.22,
-    camPitch: 0.28,
+    camYaw: 0.24,
+    camPitch: 0.10,
   };
 
   const state = {
@@ -232,10 +232,10 @@
 
   function setPreset(name) {
     const presets = {
-      mobile:     { lensStrength: 1.00, beta: 0.22, gravShift: 0.90, emission: 1.00, quality: 0.55, exposure: 0.98 },
-      tablet:     { lensStrength: 1.10, beta: 0.28, gravShift: 1.02, emission: 1.18, quality: 0.72, exposure: 1.02 },
-      scientific: { lensStrength: 1.16, beta: 0.34, gravShift: 1.18, emission: 1.42, quality: 0.78, exposure: 1.02 },
-      cinematic:  { lensStrength: 1.36, beta: 0.42, gravShift: 1.36, emission: 1.88, quality: 0.96, exposure: 1.14 },
+      mobile:     { lensStrength: 0.98, beta: 0.20, gravShift: 0.92, emission: 0.98, quality: 0.55, exposure: 0.98 },
+      tablet:     { lensStrength: 1.10, beta: 0.26, gravShift: 1.08, emission: 1.24, quality: 0.72, exposure: 1.02 },
+      scientific: { lensStrength: 1.24, beta: 0.32, gravShift: 1.32, emission: 1.62, quality: 0.78, exposure: 1.03 },
+      cinematic:  { lensStrength: 1.42, beta: 0.44, gravShift: 1.52, emission: 2.06, quality: 0.96, exposure: 1.12 },
     };
     const p = presets[name] || presets.scientific;
     state.preset = name;
@@ -524,18 +524,23 @@
 
     vec3 background(vec3 rd) {
       float h = clamp(rd.y * 0.5 + 0.5, 0.0, 1.0);
-      vec3 base = mix(vec3(0.012, 0.004, 0.028), vec3(0.050, 0.026, 0.098), h);
+      vec3 base = mix(vec3(0.003, 0.004, 0.016), vec3(0.026, 0.052, 0.120), h);
 
-      float dustBand = exp(-pow(rd.y * 2.0, 2.0));
-      float dust = 0.5 + 0.5 * sin(rd.x * 8.0 + rd.z * 6.5 + uTime * 0.018);
-      base += vec3(0.060, 0.032, 0.084) * dustBand * dust * 0.58;
+      float nebBand = exp(-pow(rd.y * 1.7, 2.0));
+      float nebFlow = 0.5 + 0.5 * sin(rd.x * 7.4 + rd.z * 6.2 + uTime * 0.032);
+      base += vec3(0.050, 0.028, 0.092) * nebBand * nebFlow * 0.72;
 
-      vec3 id = floor(rd * 360.0);
-      vec3 fr = fract(rd * 360.0) - 0.5;
-      float star = smoothstep(0.09, 0.0, length(fr)) * step(0.9975, hash13(id));
-      vec3 starCol = mix(vec3(0.62, 0.78, 1.00), vec3(1.00, 0.85, 0.58), hash13(id + 8.7));
+      float galBand = exp(-pow(rd.y * 3.6, 2.0));
+      float galHue = 0.5 + 0.5 * sin(rd.x * 4.0 + rd.z * 2.2 + uTime * 0.012);
+      base += mix(vec3(0.020, 0.015, 0.040), vec3(0.080, 0.040, 0.024), galHue) * galBand * 0.42;
 
-      return base + starCol * star * 8.8;
+      vec3 id = floor(rd * 440.0);
+      vec3 fr = fract(rd * 440.0) - 0.5;
+      float star = smoothstep(0.085, 0.0, length(fr)) * step(0.99815, hash13(id));
+      float twinkle = 0.65 + 0.35 * sin(uTime * 0.75 + hash13(id + 13.0) * 6.2831);
+      vec3 starCol = mix(vec3(0.62, 0.80, 1.12), vec3(1.24, 0.92, 0.62), hash13(id + 7.1));
+
+      return base + starCol * star * (9.4 * twinkle);
     }
 
     mat2 rot2(float a) {
@@ -544,98 +549,91 @@
       return mat2(c, -s, s, c);
     }
 
-    float tunnelRadius(float x) {
-      float s = abs(x) * 1.85;
-      return 0.11 + 0.10 * sqrt(1.0 + s * s);
+    float tunnelRadius(float y) {
+      float a = abs(y);
+      float flare = 1.0 - exp(-a * 1.35);
+      return mix(0.30, 0.88, flare);
     }
 
-    float tunnelRadiusDx(float x) {
-      float e = 0.001;
-      return (tunnelRadius(x + e) - tunnelRadius(x - e)) / (2.0 * e);
+    vec3 lensSample(vec3 ro, vec3 rd) {
+      float impact = length(cross(ro, rd));
+      float bend = uLensStrength * (0.10 + 0.15 * uGravShift) / (impact * impact + 0.16);
+      bend = clamp(bend, 0.0, 0.62);
+      vec3 warped = normalize(mix(rd, normalize(-ro), bend));
+      return background(warped);
     }
 
-    vec3 composeWormhole(mat3 cam, vec2 uv, int raySteps) {
+    vec3 composeWormhole(vec3 ro, mat3 cam, vec2 uv, int raySteps) {
       float mode = uRenderMode;
       float t = uTime;
 
-      vec2 p = uv;
-      p.x += sin(uCamAngles.x) * 0.075;
-      p.y += sin(uCamAngles.y) * 0.055;
+      vec3 rd = normalize(cam * vec3(uv, 1.85));
+      vec3 color = lensSample(ro, rd);
 
-      float x = p.x * 1.45;
-      float y = p.y * 1.05;
-      float ay = abs(y);
+      float tClose = max(0.0, -dot(ro, rd));
+      vec3 pClose = ro + rd * tClose;
+      float b = length(pClose);
 
-      float r = tunnelRadius(x);
-      float sd = ay - r;
-      float drdx = tunnelRadiusDx(x);
-      vec2 n = normalize(vec2(-drdx, sign(y == 0.0 ? 1.0 : y)));
-      vec2 ldir = normalize(vec2(-0.32, 0.95));
-      float diff = clamp(dot(n, ldir), 0.0, 1.0);
+      float shadowR = mix(0.44, 0.40, mode) * (0.82 + 0.32 * uGravShift);
+      float shadow = 1.0 - smoothstep(shadowR, shadowR + 0.095, b);
+      float photonRing = exp(-pow((b - (shadowR + 0.065)) / 0.030, 2.0));
+      float haloRing = exp(-pow((b - (shadowR + 0.14)) / 0.080, 2.0));
+      color *= (1.0 - 0.985 * shadow);
+      color += vec3(1.36, 1.12, 0.84) * photonRing * (0.12 + 0.20 * uEmission);
+      color += vec3(0.20, 0.44, 0.92) * haloRing * (0.04 + 0.07 * mode);
 
-      float shellW = mix(0.0065, 0.0048, mode);
-      float shell = exp(-pow(sd / shellW, 2.0));
-      float inside = 1.0 - smoothstep(0.0, 0.016, sd);
+      if (abs(rd.y) > 0.00045) {
+        float tDisk = -ro.y / rd.y;
+        if (tDisk > 0.0) {
+          vec3 pd = ro + rd * tDisk;
+          float r = length(pd.xz);
+          float inner = mix(0.60, 0.56, mode);
+          float outer = 3.20;
+          float ringA = exp(-pow((r - 1.16) / 0.14, 2.0));
+          float ringB = exp(-pow((r - 1.80) / 0.34, 2.0));
+          float envelope = smoothstep(inner, inner + 0.12, r) * (1.0 - smoothstep(outer - 0.22, outer, r));
 
-      float lineDetail = mix(1.0, float(raySteps) / 98.0, mode);
-      float merPhase = (x * mix(10.5, 16.5, mode) - t * 0.55) * lineDetail;
-      float meridian = exp(-pow(sin(merPhase) / 0.11, 2.0));
+          float az = atan(pd.z, pd.x);
+          float turbulence = 0.72 + 0.28 * sin(az * 13.5 - t * 1.65 + r * 7.2);
+          float streak = 0.68 + 0.32 * sin(az * 21.0 + r * 9.0 - t * 2.1);
+          float grain = hash13(vec3(floor(pd.x * 28.0), floor(pd.z * 28.0), floor(t * 1.4)));
+          vec3 tangent = normalize(vec3(-pd.z, 0.0, pd.x));
+          float dop = clamp(dot(tangent, -rd), -1.0, 1.0);
+          float shift = 0.5 + 0.5 * dop;
 
-      float latAccum = 0.0;
-      for (int i = 1; i <= 8; i++) {
-        float f = float(i) / 8.0;
-        float yi = r * f;
-        float w = mix(0.0052, 0.0032, f);
-        latAccum += exp(-pow((ay - yi) / w, 2.0));
+          vec3 hot = vec3(1.94, 1.62, 1.24);
+          vec3 warm = vec3(1.52, 0.74, 0.30);
+          vec3 cool = vec3(0.60, 0.92, 1.52);
+          vec3 diskCol = mix(warm, hot, smoothstep(2.5, 0.75, r));
+          diskCol = mix(diskCol * 0.74, mix(cool, vec3(1.75, 0.78, 0.40), shift), min(1.0, uBeta * 1.05));
+
+          float gravFade = exp(-uGravShift * 0.10 / max(r, 0.45));
+          float diskI = (1.40 * ringA + 0.58 * ringB) * envelope * turbulence * gravFade;
+          diskI *= (0.82 + 0.26 * streak) * (0.88 + 0.22 * grain);
+          diskI *= 0.24 + 0.38 * uEmission;
+          color += diskCol * diskI;
+        }
       }
-      float latGrid = clamp(latAccum * 0.18, 0.0, 1.0) * inside;
-      float lonRibs = exp(-pow(sin((x * mix(13.0, 19.0, mode) - t * 0.46) * lineDetail) / 0.13, 2.0));
-      float lonMask = inside * exp(-pow(ay / max(0.0001, r * 1.02), 6.0));
-      float mesh = clamp(shell * (0.55 + 0.45 * meridian) + latGrid * (0.45 + 0.55 * meridian) + lonRibs * lonMask * 0.42, 0.0, 1.0);
 
-      vec3 warm = vec3(1.62, 1.02, 0.40);
-      vec3 cool = vec3(0.58, 0.54, 1.38);
-      float sideMix = smoothstep(-1.2, 1.2, x + 0.16 * sin(t * 0.08));
-      vec3 shellCol = mix(cool, warm, sideMix) * (0.52 + 0.72 * diff);
+      vec3 rdGhost = normalize(mix(rd, normalize(-pClose), 0.38));
+      if (abs(rdGhost.y) > 0.00045) {
+        float tGhost = -ro.y / rdGhost.y;
+        if (tGhost > 0.0) {
+          vec3 pg = ro + rdGhost * tGhost;
+          float rg = length(pg.xz);
+          float ringG = exp(-pow((rg - 1.35) / 0.20, 2.0));
+          float envG = smoothstep(0.68, 0.86, rg) * (1.0 - smoothstep(2.40, 2.90, rg));
+          float lensMask = exp(-pow((b - (shadowR + 0.06)) / 0.16, 2.0));
+          float glowG = ringG * envG * lensMask * (0.12 + 0.16 * uEmission);
+          color += vec3(1.12, 0.94, 0.72) * glowG;
+        }
+      }
 
-      float throat = exp(-pow(x / 0.19, 2.0)) * exp(-pow(ay / 0.08, 2.0));
-      float beam = exp(-pow(ay / 0.018, 2.0)) * exp(-pow(x / 0.62, 2.0));
-      vec3 core = vec3(1.95, 1.62, 1.02) * (0.22 * throat + 0.12 * beam);
-      core *= mix(1.0, 1.18, mode);
+      float throatGlow = exp(-pow(b / max(0.18, shadowR * 0.72), 2.0));
+      color += vec3(0.08, 0.12, 0.22) * throatGlow * (0.12 + 0.10 * mode);
 
-      vec2 ml = vec2(-1.22, 0.0);
-      vec2 mr = vec2( 1.22, 0.0);
-      float mouthR = mix(0.24, 0.285, mode);
-      float mouthL = 1.0 - smoothstep(mouthR, mouthR + 0.008, length(vec2(x, y) - ml));
-      float mouthRgt = 1.0 - smoothstep(mouthR, mouthR + 0.008, length(vec2(x, y) - mr));
-      mouthL *= smoothstep(-1.65, -0.78, x);
-      mouthRgt *= smoothstep(0.78, 1.65, x);
-      float mouths = max(mouthL, mouthRgt);
-
-      float lens = uLensStrength * 0.08 / (abs(sd) + 0.06);
-      vec2 uvWarp = uv;
-      uvWarp.x += sign(x) * lens * exp(-ay * 2.2) * 0.07;
-      uvWarp.y += sin(x * 8.8 + t * 0.56) * lens * 0.010;
-      vec3 bg = background(normalize(cam * vec3(uvWarp, 1.75)));
-
-      vec3 color = bg;
-      color += shellCol * shell * (0.42 + 0.34 * uEmission);
-      color += vec3(1.00, 0.92, 0.80) * mesh * mix(0.78, 0.95, mode);
-      color += core;
-
-      float interior = exp(-pow(ay / max(0.05, r * 0.75), 2.7));
-      color += mix(vec3(0.045, 0.018, 0.085), vec3(0.12, 0.035, 0.085), sideMix) * interior * 0.16 * inside;
-
-      float cavity = exp(-pow(ay / max(0.04, r * 0.40), 2.4)) * exp(-pow(x / 0.80, 2.0));
-      color *= (1.0 - 0.62 * cavity);
-      color *= (1.0 - 0.995 * mouths);
-
-      float ringL = exp(-pow((length(vec2(x, y) - ml) - mouthR * 1.02) / 0.0055, 2.0));
-      float ringR = exp(-pow((length(vec2(x, y) - mr) - mouthR * 1.02) / 0.0055, 2.0));
-      color += vec3(0.98, 0.90, 0.72) * (ringL + ringR) * 0.58;
-
-      float seam = exp(-pow((ay - r) / 0.022, 2.0)) * exp(-pow(x / 1.10, 2.0));
-      color += vec3(0.12, 0.32, 0.96) * seam * 0.06 * mode;
+      float vignette = smoothstep(1.40, 0.35, length(uv));
+      color *= mix(0.92, 1.08, vignette);
 
       return color;
     }
@@ -644,23 +642,23 @@
       vec2 frag = gl_FragCoord.xy;
       vec2 uv = (frag - 0.5 * uResolution) / uResolution.y;
 
-      float yaw = uCamAngles.x + uTime * mix(0.042, 0.022, uRenderMode);
-      float pitch = clamp(uCamAngles.y, -1.0, 1.0);
-      float radius = mix(8.4, 7.0, uRenderMode);
-      float height = mix(2.2, 3.2, uRenderMode);
-      vec3 ro = vec3(cos(yaw) * radius, sin(pitch) * height, sin(yaw) * radius);
-      mat3 cam = cameraBasis(ro, vec3(0.0));
+      float yaw = uCamAngles.x + uTime * mix(0.016, 0.010, uRenderMode);
+      float pitch = clamp(uCamAngles.y, -0.95, 0.95);
+      float radius = mix(6.3, 5.8, uRenderMode);
+      float height = mix(0.95, 0.72, uRenderMode);
+      vec3 ro = vec3(cos(yaw) * radius, 0.18 + sin(pitch) * height, sin(yaw) * radius);
+      mat3 cam = cameraBasis(ro, vec3(0.0, 0.03, 0.0));
 
-      vec3 color = composeWormhole(cam, uv, uRaySteps);
+      vec3 color = composeWormhole(ro, cam, uv, uRaySteps);
 
       if (uQuality > 0.96 || uRenderMode > 0.5) {
         vec2 j = vec2(0.45, -0.30) / uResolution;
-        vec3 color2 = composeWormhole(cam, uv + j, uRaySteps);
-        color = mix(color, color2, 0.30);
+        vec3 color2 = composeWormhole(ro, cam, uv + j, uRaySteps);
+        color = mix(color, color2, 0.12);
         if (uRenderMode > 0.5) {
           vec2 j2 = vec2(-0.35, 0.22) / uResolution;
-          vec3 color3 = composeWormhole(cam, uv + j2, uRaySteps);
-          color = mix(color, color3, 0.25);
+          vec3 color3 = composeWormhole(ro, cam, uv + j2, uRaySteps);
+          color = mix(color, color3, 0.10);
         }
       }
 
