@@ -1,22 +1,69 @@
-# Wormhole Codebase Import
+# Wormhole Realtime WebGL
 
-This repository consolidates the wormhole simulation code recovered from server-side execution artifacts.
+This repository hosts the realtime wormhole visualization consumed by ExecutiveDashboard at `/wormhole`.
 
-## Structure
+## Runtime Modes (VNext)
+
+- `live`
+  - Interstellar-style balance mode for desktop premium.
+  - Target: average FPS >= 30 with per-sample floor >= 24 in high-resolution benchmark.
+  - Adaptive scale active (`resolutionScale` in `__iterMetrics`) in the range `0.78..1.00`.
+- `cinematic`
+  - Max visual fidelity mode.
+  - Fixed `resolutionScale=1.0`, higher ray step budget.
+  - No hard FPS guarantee.
+
+## Public Runtime Contract
+
+The page exposes:
+
+- `window.__iterCtl.setParams(payload)`
+- `window.__iterCtl.getMetrics()`
+- `window.__iterCtl.getEval()`
+
+Required compatibility keys remain stable:
+
+- Metrics: `fpsAvg`, `frameMs`, `frameCount`, `timestamp`, `preset`, `params`, `realismScore`, `stabilityScore`
+- Eval: `timestamp`, `checks`, `realismScore`, `guardrails_pass`, `desktop_scientific_met`
+
+VNext non-breaking additions:
+
+- Metrics: `renderMode`, `resolutionScale`, `raySteps`
+- Eval: `live_target_met`
+
+## Repository Structure
 
 - `src/realtime-webgl/index.html`
-  - Realtime WebGL wormhole / white-hole simulation with `__iterCtl`, `__iterMetrics`, and `__iterEval` contract.
+  - Main production visualization and HUD controls.
 - `src/r4-hq-recovery/preview.html`
-  - R4 visual coherence recovery variant.
+  - Legacy recovery variant.
 - `tools/run_benchmark_twice.js`
-  - Two-run benchmark collector (Playwright).
+  - Two-run benchmark collector for contract + performance drift.
 - `tools/validate_preview_contract.py`
-  - Contract and performance threshold validator.
+  - Validator for benchmark summaries and required contract keys.
 - `qa/qa_final_e2e_probe.js`
-  - QA probe used for final 2-run validation.
+  - Legacy probe maintained for compatibility.
 - `evidence/pass-r5/`
-  - PASS gate evidence (report, metrics, and screenshots for run1/run2).
+  - Prior QA gate artifacts.
+- `evidence/pass-r6/`
+  - VNext QA gate artifacts for live/cinematic rollout.
 
-## Notes
+## VNext Verification Workflow
 
-This import captures the wormhole implementation and its QA evidence as extracted from runtime artifacts on 2026-03-02.
+1. Run 2 benchmark passes:
+
+```bash
+NODE_PATH=/tmp/wormhole-validate/node_modules \
+CHROME_BIN=/home/aponce/.cache/ms-playwright/chromium-1208/chrome-linux64/chrome \
+PREVIEW_URL=https://r530.tail3525c1.ts.net/wormhole \
+ASSETS_DIR=/home/aponce/wormhole/evidence/pass-r6 \
+node tools/run_benchmark_twice.js
+```
+
+2. Validate contract + thresholds:
+
+```bash
+python3 tools/validate_preview_contract.py \
+  --summary evidence/pass-r6/run_compare_summary.json \
+  --out evidence/pass-r6/validation_report.json
+```
