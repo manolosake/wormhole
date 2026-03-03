@@ -182,8 +182,8 @@
   };
 
   const defaultView = {
-    camYaw: 0.34,
-    camPitch: 0.42,
+    camYaw: 0.22,
+    camPitch: 0.30,
   };
 
   const state = {
@@ -215,7 +215,7 @@
     const presets = {
       mobile:     { lensStrength: 1.00, beta: 0.22, gravShift: 0.90, emission: 1.00, quality: 0.55, exposure: 0.98 },
       tablet:     { lensStrength: 1.10, beta: 0.28, gravShift: 1.02, emission: 1.18, quality: 0.72, exposure: 1.02 },
-      scientific: { lensStrength: 1.26, beta: 0.34, gravShift: 1.20, emission: 1.72, quality: 0.84, exposure: 1.12 },
+      scientific: { lensStrength: 1.20, beta: 0.33, gravShift: 1.16, emission: 1.55, quality: 0.82, exposure: 1.05 },
       cinematic:  { lensStrength: 1.30, beta: 0.40, gravShift: 1.34, emission: 1.70, quality: 0.90, exposure: 1.10 },
     };
     const p = presets[name] || presets.scientific;
@@ -540,19 +540,30 @@
       vec2 frag = gl_FragCoord.xy;
       vec2 uv = (frag - 0.5 * uResolution) / uResolution.y;
 
-      float yaw = uCamAngles.x + uTime * 0.10;
+      float yaw = uCamAngles.x + uTime * 0.07;
       float pitch = clamp(uCamAngles.y, -1.15, 1.15);
 
-      vec3 ro = vec3(cos(yaw) * 3.35, sin(pitch) * 2.50, sin(yaw) * 3.35);
+      vec3 ro = vec3(cos(yaw) * 6.40, sin(pitch) * 3.20, sin(yaw) * 6.40);
       vec3 ta = vec3(0.0, 0.0, 0.0);
       mat3 cam = cameraBasis(ro, ta);
 
-      vec3 rd = normalize(cam * vec3(uv, 1.40));
+      vec3 rd = normalize(cam * vec3(uv, 1.38));
       vec3 color = render(ro, rd);
+
+      vec2 uvWarp = uv - vec2(0.26, -0.02);
+      float rr = length(uvWarp);
+      float th = atan(uvWarp.y, uvWarp.x);
+      float ring = exp(-pow((rr - 0.15) / 0.040, 2.0));
+      float throat2d = exp(-pow(rr / 0.045, 2.0));
+      float swirl = 0.5 + 0.5 * sin(th * 2.0 - uTime * 1.1);
+      vec3 ringCol = mix(vec3(0.34, 0.62, 1.08), vec3(0.80, 0.68, 0.50), 0.22 + 0.34 * swirl);
+      color += ringCol * ring * (0.32 + 0.20 * uEmission);
+      color += vec3(0.90, 1.20, 1.65) * throat2d * 0.30;
+      color *= (1.0 - throat2d * 0.48);
 
       if (uQuality > 0.96) {
         vec2 j = vec2(0.42, -0.27) / uResolution;
-        vec3 rd2 = normalize(cam * vec3(uv + j, 1.40));
+        vec3 rd2 = normalize(cam * vec3(uv + j, 1.38));
         color = mix(color, render(ro, rd2), 0.32);
       }
 
