@@ -136,6 +136,10 @@
     <button class="pill" data-preset="cinematic">cinematic</button>
     <button class="pill" id="resetViewBtn" type="button">reset view</button>
   </div>
+  <div class="bar" id="modeBar">
+    <button class="pill active" data-mode="live">live</button>
+    <button class="pill" data-mode="cinematic">cinematic</button>
+  </div>
   <div class="grid">
     <div class="box">FPS<strong id="fps">0</strong></div>
     <div class="box">Frame ms<strong id="frame">0</strong></div>
@@ -215,6 +219,15 @@
     });
   }
 
+  function setRenderMode(mode) {
+    const next = mode === 'cinematic' ? 'cinematic' : 'live';
+    state.renderMode = next;
+    if (next === 'cinematic') {
+      state.resolutionScale = 1.0;
+    }
+    document.querySelectorAll('#modeBar .pill[data-mode]').forEach((b) => b.classList.toggle('active', b.dataset.mode === next));
+  }
+
   function setPreset(name) {
     const presets = {
       mobile:     { lensStrength: 1.00, beta: 0.22, gravShift: 0.90, emission: 1.00, quality: 0.55, exposure: 0.98 },
@@ -227,8 +240,8 @@
     // Freeze dynamic quality behavior for reproducible scientific benchmarks.
     state.autoQuality = state.deterministicMode ? false : name !== 'scientific';
     Object.keys(p).forEach((k) => { els[k].value = String(p[k]); });
-    if (name === 'cinematic') state.renderMode = 'cinematic';
-    else if (name === 'scientific') state.renderMode = 'live';
+    if (name === 'cinematic') setRenderMode('cinematic');
+    else if (name === 'scientific') setRenderMode('live');
     syncUI();
     document.querySelectorAll('#presetBar .pill[data-preset]').forEach((b) => b.classList.toggle('active', b.dataset.preset === name));
   }
@@ -309,6 +322,9 @@
       frameCount: state.frameCount,
       timestamp: new Date().toISOString(),
       preset: state.preset,
+      renderMode: state.renderMode,
+      resolutionScale: Number(state.resolutionScale.toFixed(3)),
+      raySteps: state.raySteps,
       params: {
         lensStrength: Number(els.lensStrength.value),
         beta: Number(els.beta.value),
@@ -327,8 +343,16 @@
       checks: rel.checks,
       realismScore: rel.score,
       guardrails_pass: Boolean(rel.checks.lensing_active && rel.checks.redshift_blueshift_active && rel.checks.whitehole_emission_active),
-      desktop_scientific_met: state.preset !== 'scientific' ? null : state.fpsAvg >= 45,
+      live_target_met: state.renderMode !== 'live' ? null : state.fpsAvg >= state.liveTargetFps,
+      desktop_scientific_met: state.preset !== 'scientific' ? null : state.fpsAvg >= state.liveTargetFps,
     };
+
+    if (state.frameCount % 15 === 0) {
+      const modeText = state.renderMode === 'live'
+        ? `Mode live (${state.liveTargetFps} FPS target).`
+        : 'Mode cinematic (max quality).';
+      statusEl.textContent = `${modeText} Drag to orbit. Use reset view (or press R) if needed.`;
+    }
   }
 
   function resize() {
@@ -395,6 +419,7 @@
       setParams(p) {
         Object.entries(p || {}).forEach(([k, v]) => {
           if (k === 'preset') setPreset(String(v));
+          else if (k === 'renderMode') setRenderMode(String(v));
           else if (k === 'deterministicMode') state.deterministicMode = Boolean(v);
           else if (Object.prototype.hasOwnProperty.call(els, k)) {
             const raw = Number(v);
@@ -732,6 +757,8 @@
       Object.entries(p || {}).forEach(([k, v]) => {
         if (k === 'preset') {
           setPreset(String(v));
+        } else if (k === 'renderMode') {
+          setRenderMode(String(v));
         } else if (k === 'deterministicMode') {
           state.deterministicMode = Boolean(v);
           state.autoQuality = state.deterministicMode ? false : state.autoQuality;
@@ -768,6 +795,13 @@
     });
   });
 
+  document.querySelectorAll('#modeBar .pill[data-mode]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      setRenderMode(btn.dataset.mode || 'live');
+      resize();
+    });
+  });
+
   const resetViewBtn = document.getElementById('resetViewBtn');
   if (resetViewBtn) {
     resetViewBtn.addEventListener('click', () => {
@@ -791,10 +825,14 @@
   window.addEventListener('resize', resize);
 
   setPreset('scientific');
+  setRenderMode('live');
   syncUI();
   resize();
   window.__iterMetrics = {
     fpsAvg: 0, frameMs: 0, frameCount: 0, timestamp: new Date().toISOString(), preset: state.preset,
+    renderMode: state.renderMode,
+    resolutionScale: Number(state.resolutionScale.toFixed(3)),
+    raySteps: state.raySteps,
     params: { lensStrength: Number(els.lensStrength.value), beta: Number(els.beta.value), gravShift: Number(els.gravShift.value), emission: Number(els.emission.value), quality: Number(els.quality.value), exposure: Number(els.exposure.value), deterministicMode: state.deterministicMode },
     realismScore: 0, stabilityScore: 0
   };
@@ -803,9 +841,10 @@
     checks: realismCheck().checks,
     realismScore: 0,
     guardrails_pass: false,
+    live_target_met: null,
     desktop_scientific_met: null
   };
-  statusEl.textContent = 'WebGL2 active. Drag to orbit. Use reset view (or press R) if needed.';
+  statusEl.textContent = `Mode live (${state.liveTargetFps} FPS target). Drag to orbit. Use reset view (or press R) if needed.`;
   requestAnimationFrame(loop);
 })();
 </script>
