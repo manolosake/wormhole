@@ -224,6 +224,8 @@
     state.renderMode = next;
     if (next === 'cinematic') {
       state.resolutionScale = 1.0;
+    } else if (state.resolutionScale < 0.9) {
+      state.resolutionScale = 0.9;
     }
     document.querySelectorAll('#modeBar .pill[data-mode]').forEach((b) => b.classList.toggle('active', b.dataset.mode === next));
   }
@@ -232,7 +234,7 @@
     const presets = {
       mobile:     { lensStrength: 1.00, beta: 0.22, gravShift: 0.90, emission: 1.00, quality: 0.55, exposure: 0.98 },
       tablet:     { lensStrength: 1.10, beta: 0.28, gravShift: 1.02, emission: 1.18, quality: 0.72, exposure: 1.02 },
-      scientific: { lensStrength: 1.16, beta: 0.34, gravShift: 1.18, emission: 1.42, quality: 0.86, exposure: 1.02 },
+      scientific: { lensStrength: 1.16, beta: 0.34, gravShift: 1.18, emission: 1.42, quality: 0.78, exposure: 1.02 },
       cinematic:  { lensStrength: 1.30, beta: 0.40, gravShift: 1.34, emission: 1.70, quality: 0.90, exposure: 1.10 },
     };
     const p = presets[name] || presets.scientific;
@@ -251,7 +253,23 @@
     if (state.renderMode === 'cinematic') {
       return Math.max(96, Math.min(128, Math.round(96 + q * 32)));
     }
-    return Math.max(56, Math.min(80, Math.round(56 + q * 24)));
+    const scaleNorm = Math.max(0, Math.min(1, (state.resolutionScale - 0.78) / 0.22));
+    return Math.max(56, Math.min(80, Math.round(56 + q * 18 + scaleNorm * 6)));
+  }
+
+  function adaptLivePerformance() {
+    if (state.renderMode !== 'live') return;
+    if (state.dragging) return;
+    if (state.frameCount % 30 !== 0) return;
+    const low = state.liveTargetFps - 1.0;
+    const high = state.liveTargetFps + 6.0;
+    if (state.fpsAvg < low && state.resolutionScale > 0.78) {
+      state.resolutionScale = Math.max(0.78, state.resolutionScale - 0.03);
+      resize();
+    } else if (state.fpsAvg > high && state.resolutionScale < 1.0) {
+      state.resolutionScale = Math.min(1.0, state.resolutionScale + 0.02);
+      resize();
+    }
   }
 
   function resetView() {
@@ -303,6 +321,7 @@
     ui.frame.textContent = state.frameMs.toFixed(2);
     ui.realism.textContent = String(rel.score);
     ui.stability.textContent = stability.toFixed(1);
+    adaptLivePerformance();
 
     if (state.autoQuality && state.frameCount % 45 === 0 && state.preset !== 'cinematic' && !state.dragging) {
       const q = Number(els.quality.value);
@@ -351,14 +370,15 @@
       const modeText = state.renderMode === 'live'
         ? `Mode live (${state.liveTargetFps} FPS target).`
         : 'Mode cinematic (max quality).';
-      statusEl.textContent = `${modeText} Drag to orbit. Use reset view (or press R) if needed.`;
+      statusEl.textContent = `${modeText} Scale ${state.resolutionScale.toFixed(2)} | steps ${state.raySteps}. Drag to orbit. Use reset view (or press R) if needed.`;
     }
   }
 
   function resize() {
     const dprCap = 2.0;
     const qualityScale = 0.62 + Number(els.quality.value) * 0.30;
-    const dpr = Math.min(window.devicePixelRatio || 1, dprCap) * qualityScale;
+    const modeScale = state.renderMode === 'live' ? state.resolutionScale : 1.0;
+    const dpr = Math.min(window.devicePixelRatio || 1, dprCap) * qualityScale * modeScale;
     const w = Math.max(2, Math.floor(window.innerWidth * dpr));
     const h = Math.max(2, Math.floor(window.innerHeight * dpr));
     canvas.width = w;
@@ -844,7 +864,7 @@
     live_target_met: null,
     desktop_scientific_met: null
   };
-  statusEl.textContent = `Mode live (${state.liveTargetFps} FPS target). Drag to orbit. Use reset view (or press R) if needed.`;
+  statusEl.textContent = `Mode live (${state.liveTargetFps} FPS target). Scale ${state.resolutionScale.toFixed(2)} | steps ${state.raySteps}. Drag to orbit. Use reset view (or press R) if needed.`;
   requestAnimationFrame(loop);
 })();
 </script>
