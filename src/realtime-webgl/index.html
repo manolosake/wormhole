@@ -134,6 +134,7 @@
     <button class="pill" data-preset="tablet">tablet</button>
     <button class="pill active" data-preset="scientific">scientific</button>
     <button class="pill" data-preset="cinematic">cinematic</button>
+    <button class="pill" id="resetViewBtn" type="button">reset view</button>
   </div>
   <div class="grid">
     <div class="box">FPS<strong id="fps">0</strong></div>
@@ -180,6 +181,11 @@
     stability: document.getElementById('stability'),
   };
 
+  const defaultView = {
+    camYaw: 0.34,
+    camPitch: 0.42,
+  };
+
   const state = {
     preset: 'scientific',
     fpsAvg: 0,
@@ -188,8 +194,8 @@
     times: [],
     frameCount: 0,
     start: performance.now(),
-    camYaw: 0.0,
-    camPitch: 0.0,
+    camYaw: defaultView.camYaw,
+    camPitch: defaultView.camPitch,
     dragging: false,
     dragX: 0,
     dragY: 0,
@@ -209,7 +215,7 @@
     const presets = {
       mobile:     { lensStrength: 1.00, beta: 0.22, gravShift: 0.90, emission: 1.00, quality: 0.55, exposure: 0.98 },
       tablet:     { lensStrength: 1.10, beta: 0.28, gravShift: 1.02, emission: 1.18, quality: 0.72, exposure: 1.02 },
-      scientific: { lensStrength: 1.22, beta: 0.34, gravShift: 1.20, emission: 1.45, quality: 0.74, exposure: 1.05 },
+      scientific: { lensStrength: 1.26, beta: 0.34, gravShift: 1.20, emission: 1.72, quality: 0.84, exposure: 1.12 },
       cinematic:  { lensStrength: 1.30, beta: 0.40, gravShift: 1.34, emission: 1.70, quality: 0.90, exposure: 1.10 },
     };
     const p = presets[name] || presets.scientific;
@@ -218,7 +224,12 @@
     state.autoQuality = state.deterministicMode ? false : name !== 'scientific';
     Object.keys(p).forEach((k) => { els[k].value = String(p[k]); });
     syncUI();
-    document.querySelectorAll('#presetBar .pill').forEach((b) => b.classList.toggle('active', b.dataset.preset === name));
+    document.querySelectorAll('#presetBar .pill[data-preset]').forEach((b) => b.classList.toggle('active', b.dataset.preset === name));
+  }
+
+  function resetView() {
+    state.camYaw = defaultView.camYaw;
+    state.camPitch = defaultView.camPitch;
   }
 
   function realismCheck() {
@@ -502,6 +513,9 @@
         vec3 cJet = vec3(1.50, 1.20, 0.86) * (0.40 + 0.60 * uEmission) * jet;
         vec3 emit = cTunnel + cDisk + cJet;
 
+        float core = exp(-12.0 * dot(p, p));
+        emit += vec3(0.28, 0.60, 1.15) * core * (0.35 + uEmission * 0.25);
+
         float grav = exp(-uGravShift * 0.68 / (r + 0.35));
         float dop = clamp(1.0 + uBeta * dot(rd, normalize(vec3(0.88, 0.24, -0.12))), 0.35, 2.3);
         vec3 shift = vec3(pow(dop, 1.20), 1.0, pow(1.0 / dop, 1.15));
@@ -526,19 +540,19 @@
       vec2 frag = gl_FragCoord.xy;
       vec2 uv = (frag - 0.5 * uResolution) / uResolution.y;
 
-      float yaw = uCamAngles.x + uTime * 0.22;
+      float yaw = uCamAngles.x + uTime * 0.10;
       float pitch = clamp(uCamAngles.y, -1.15, 1.15);
 
-      vec3 ro = vec3(cos(yaw) * 4.8, sin(pitch) * 1.9, sin(yaw) * 4.8);
+      vec3 ro = vec3(cos(yaw) * 3.35, sin(pitch) * 2.50, sin(yaw) * 3.35);
       vec3 ta = vec3(0.0, 0.0, 0.0);
       mat3 cam = cameraBasis(ro, ta);
 
-      vec3 rd = normalize(cam * vec3(uv, 1.95));
+      vec3 rd = normalize(cam * vec3(uv, 1.40));
       vec3 color = render(ro, rd);
 
       if (uQuality > 0.96) {
         vec2 j = vec2(0.42, -0.27) / uResolution;
-        vec3 rd2 = normalize(cam * vec3(uv + j, 1.95));
+        vec3 rd2 = normalize(cam * vec3(uv + j, 1.40));
         color = mix(color, render(ro, rd2), 0.32);
       }
 
@@ -686,11 +700,24 @@
   canvas.addEventListener('pointerup', pointerUp);
   canvas.addEventListener('pointercancel', pointerUp);
 
-  document.querySelectorAll('#presetBar .pill').forEach((btn) => {
+  document.querySelectorAll('#presetBar .pill[data-preset]').forEach((btn) => {
     btn.addEventListener('click', () => {
       setPreset(btn.dataset.preset || 'scientific');
       resize();
     });
+  });
+
+  const resetViewBtn = document.getElementById('resetViewBtn');
+  if (resetViewBtn) {
+    resetViewBtn.addEventListener('click', () => {
+      resetView();
+    });
+  }
+
+  window.addEventListener('keydown', (ev) => {
+    if (String(ev.key || '').toLowerCase() === 'r') {
+      resetView();
+    }
   });
 
   Object.values(els).forEach((el) => {
@@ -717,7 +744,7 @@
     guardrails_pass: false,
     desktop_scientific_met: null
   };
-  statusEl.textContent = 'WebGL2 active. Drag to orbit. Scientific preset tuned for realism/performance balance.';
+  statusEl.textContent = 'WebGL2 active. Drag to orbit. Use reset view (or press R) if needed.';
   requestAnimationFrame(loop);
 })();
 </script>
